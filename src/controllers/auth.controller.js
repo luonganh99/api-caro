@@ -106,3 +106,21 @@ module.exports.signup = async (req, res) => {
     });
   }
 };
+
+module.exports.google = async (req, res) => {
+  if (req.user) {
+    const token = createToken(req.user.userId);
+    res.status(200).json({ status: 'success', data: { token, userInfo: req.user } });
+  } else {
+    res.status(400).json({ status: 'error', message: req.error });
+  }
+};
+
+module.exports.facebook = async (req, res) => {
+  if (req.user) {
+    const token = createToken(req.user.userId);
+    res.status(200).json({ status: 'success', data: { token, userInfo: req.user } });
+  } else {
+    res.status(400).json({ status: 'error', message: req.error });
+  }
+};
