@@ -7,11 +7,25 @@ module.exports.userLogin = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    if (!username || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Authentication is incorrect',
+        errors: {
+          username: !username && 'Username is required',
+          password: !password && 'Password is required',
+        },
+      });
+    }
+
     const user = await UserModel.findByUsername(username);
     if (!user) {
       return res.status(400).json({
         status: 'error',
-        message: 'Username is not correct',
+        message: 'Authentication is incorrect',
+        errors: {
+          username: 'Username is incorrect',
+        },
       });
     }
 
@@ -19,7 +33,10 @@ module.exports.userLogin = async (req, res) => {
     if (!auth) {
       return res.status(400).json({
         status: 'error',
-        message: 'Password is not correct',
+        message: 'Authentication is incorrect',
+        errors: {
+          password: 'Password is incorrect',
+        },
       });
     }
 
@@ -48,10 +65,14 @@ module.exports.adminLogin = async (req, res) => {
     const { username, password } = req.body;
 
     const user = await UserModel.findByUsername(username);
+    // Check authorization
     if (!user || user.role !== 1) {
       return res.status(400).json({
         status: 'error',
-        message: 'Username is not correct',
+        message: 'Authentication is incorrect',
+        errors: {
+          username: 'Username is incorrect',
+        },
       });
     }
 
@@ -59,7 +80,10 @@ module.exports.adminLogin = async (req, res) => {
     if (!auth) {
       return res.status(400).json({
         status: 'error',
-        message: 'Password is not correct',
+        message: 'Authentication is incorrect',
+        errors: {
+          password: 'Password is incorrect',
+        },
       });
     }
 

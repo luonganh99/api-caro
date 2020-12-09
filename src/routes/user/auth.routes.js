@@ -5,7 +5,7 @@ const passport = require('passport');
 const authController = require('../../controllers/auth.controller');
 
 router.post('/login', authController.userLogin);
-router.get('/signup', authController.signup);
+router.post('/signup', authController.signup);
 router.get(
   '/google',
   passport.authenticate('google-token', { session: false }),

@@ -16,7 +16,6 @@ module.exports = () => {
         try {
           const userInfo = {
             externalId: profile.id,
-            username: profile.displayName,
             email: profile.emails[0].value,
             fullname: profile.displayName,
             avatar: profile.photos[0].value,
@@ -24,7 +23,7 @@ module.exports = () => {
           let user = await UserModel.findByExternalId(userInfo.externalId);
           if (!user) {
             await UserModel.create(userInfo);
-            user = UserModel.findByExternalId(userInfo.externalId);
+            user = await UserModel.findByExternalId(userInfo.externalId);
           }
           return done(null, user);
         } catch (error) {
@@ -45,7 +44,6 @@ module.exports = () => {
         try {
           const userInfo = {
             externalId: profile.id,
-            username: profile.displayName,
             email: profile.emails[0].value,
             fullname: profile.displayName,
             avatar: profile._json.picture,
@@ -53,7 +51,7 @@ module.exports = () => {
           let user = await UserModel.findByExternalId(userInfo.externalId);
           if (!user) {
             await UserModel.create(userInfo);
-            user = UserModel.findByExternalId(userInfo.externalId);
+            user = await UserModel.findByExternalId(userInfo.externalId);
           }
           return done(null, user);
         } catch (error) {
