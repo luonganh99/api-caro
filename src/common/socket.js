@@ -1,6 +1,8 @@
+const BoardModel = require('../models/board.model');
+
 const userSocketIdMap = new Map();
 
-const addClientToMap = (username, socketId) => {
+const addClientToOnlineList = (username, socketId) => {
   if (!userSocketIdMap.has(username)) {
     // joining for the first time
     userSocketIdMap.set(username, new Set([socketId]));
@@ -10,7 +12,7 @@ const addClientToMap = (username, socketId) => {
   }
 };
 
-const removeClientFromMap = (username, socketId) => {
+const removeClientFromOnlineList = (username, socketId) => {
   if (userSocketIdMap.has(username)) {
     let userSocketIdSet = userSocketIdMap.get(username);
     userSocketIdSet.delete(socketId);
@@ -22,13 +24,19 @@ const removeClientFromMap = (username, socketId) => {
   }
 };
 
+const boardRooms = {};
+
 module.exports = (io) => {
   io.on('connection', (socket) => {
     const username = socket.handshake.query.username;
     console.log(username + ' has connected');
 
+    socket.on('getOnlineUserReq', () => {
+      io.emit('getOnlineUserRes', Array.from(userSocketIdMap));
+    });
+
     socket.on('online', () => {
-      addClientToMap(username, socket.id);
+      addClientToOnlineList(username, socket.id);
       console.log(userSocketIdMap);
 
       io.emit('getOnlineUserRes', Array.from(userSocketIdMap));
@@ -36,14 +44,56 @@ module.exports = (io) => {
 
     socket.on('offline', () => {
       console.log(username + ' has disconnected');
-      removeClientFromMap(username, socket.id);
+      removeClientFromOnlineList(username, socket.id);
       console.log(userSocketIdMap);
       io.emit('getOnlineUserRes', Array.from(userSocketIdMap));
     });
 
+    socket.on('joinBoard', async (boardId) => {
+      const userId = socket.handshake.query.userId;
+
+      try {
+        const board = await BoardModel.findById(boardId);
+
+        if (board.hostId == userId) {
+          console.log(`Host ${username} has joined board ${boardId}`);
+          socket.join(`${boardId}`);
+        } else if (board.guestId == userId) {
+          socket.join(`${boardId}`);
+          console.log(`Guest ${username} has joined board ${boardId}`);
+        } else if (board.guestId === null) {
+          await BoardModel.update({ guestId: userId }, { boardId });
+          socket.join(`${boardId}`);
+          console.log(`Guest ${username} has joined board ${boardId}`);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    socket.on('moveChessman', (data) => {
+      console.log(`${username} move chessman`);
+      const { boardId, chessman, pos } = data;
+      console.log(data);
+      //TODO: save move to database
+
+      socket.to(`${boardId}`).emit('newMoveChessman', { chessman, pos });
+    });
+
+    socket.on('leaveBoard', () => {
+      //TODO: delete user when leave board
+    });
+
+    socket.on('sendMessage', (data) => {
+      // TODO:
+      const { boardId, content } = data;
+
+      socket.to(`${boardId}`).emit('newMessage', { sender: username, content });
+    });
+
     socket.on('disconnect', () => {
       console.log(username + ' has disconnected');
-      removeClientFromMap(username, socket.id);
+      removeClientFromOnlineList(username, socket.id);
       console.log(userSocketIdMap);
       io.emit('getOnlineUserRes', Array.from(userSocketIdMap));
     });
