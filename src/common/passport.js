@@ -16,6 +16,7 @@ module.exports = () => {
         try {
           const userInfo = {
             externalId: profile.id,
+            username: profile.emails[0].value,
             email: profile.emails[0].value,
             fullname: profile.displayName,
             avatar: profile.photos[0].value,
@@ -44,6 +45,7 @@ module.exports = () => {
         try {
           const userInfo = {
             externalId: profile.id,
+            username: profile.emails[0].value,
             email: profile.emails[0].value,
             fullname: profile.displayName,
             avatar: profile._json.picture,

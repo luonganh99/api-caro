@@ -3,7 +3,7 @@ const BoardModel = require('../models/board.model');
 
 module.exports.createBoard = async (req, res) => {
   try {
-    const hostId = req.userId;
+    const hostname = req.userInfo.username;
     const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     let battleArray = '';
@@ -14,13 +14,13 @@ module.exports.createBoard = async (req, res) => {
     }
 
     console.log({
-      hostId,
+      hostname,
       battleArray,
       createdAt,
     });
 
     const boardId = await BoardModel.create({
-      hostId,
+      hostname,
       battleArray,
       createdAt,
     });
@@ -73,9 +73,12 @@ module.exports.updateBoard = async (req, res) => {
 
 module.exports.getAllBoard = async (req, res) => {
   try {
-    const userId = req.userId;
+    const username = req.userInfo.username;
 
-    const boards = await BoardModel.findByUserId(userId);
+    console.log(username);
+
+    const boards = await BoardModel.findByUsername(username);
+    console.log(boards);
 
     res.status(200).json({
       status: 'success',

@@ -1,3 +1,4 @@
+const { HEIGHT } = require('../config/boardSize.config');
 const BoardModel = require('../models/board.model');
 
 const userSocketIdMap = new Map();
@@ -50,19 +51,17 @@ module.exports = (io) => {
     });
 
     socket.on('joinBoard', async (boardId) => {
-      const userId = socket.handshake.query.userId;
-
       try {
         const board = await BoardModel.findById(boardId);
 
-        if (board.hostId == userId) {
+        if (board.hostname == username) {
           console.log(`Host ${username} has joined board ${boardId}`);
           socket.join(`${boardId}`);
-        } else if (board.guestId == userId) {
+        } else if (board.guestname == username) {
           socket.join(`${boardId}`);
           console.log(`Guest ${username} has joined board ${boardId}`);
-        } else if (board.guestId === null) {
-          await BoardModel.update({ guestId: userId }, { boardId });
+        } else if (board.guestname === null) {
+          await BoardModel.update({ guestname: username }, { boardId });
           socket.join(`${boardId}`);
           console.log(`Guest ${username} has joined board ${boardId}`);
         }
@@ -76,6 +75,13 @@ module.exports = (io) => {
       const { boardId, chessman, pos } = data;
       console.log(data);
       //TODO: save move to database
+      // const index = pos.x * HEIGHT + pos.y;
+      // let battleArray = '';
+      // try {
+      //   await BoardModel.update({battleArray }, {boardId})
+      // } catch (error) {
+      //   console.log(error);
+      // }
 
       socket.to(`${boardId}`).emit('newMoveChessman', { chessman, pos });
     });
@@ -85,7 +91,6 @@ module.exports = (io) => {
     });
 
     socket.on('sendMessage', (data) => {
-      // TODO:
       const { boardId, content } = data;
 
       socket.to(`${boardId}`).emit('newMessage', { sender: username, content });

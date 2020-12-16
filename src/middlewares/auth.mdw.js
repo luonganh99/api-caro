@@ -7,7 +7,7 @@ module.exports.authenticateToken = async (req, res, next) => {
 
   jwt.verify(token, process.env.SECRET_TOKEN, (err, decodedToken) => {
     if (err) return res.status(403).json({ status: 'error', message: 'Invalid Token' });
-    req.userId = decodedToken.userId;
+    req.userInfo = decodedToken;
     next();
   });
 };
