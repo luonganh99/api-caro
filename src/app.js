@@ -32,7 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Passport
-usePassport();
+usePassport(passport);
 app.use(passport.initialize());
 
 // Routes

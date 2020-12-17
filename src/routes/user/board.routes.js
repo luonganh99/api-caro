@@ -1,12 +1,17 @@
+const passport = require('passport');
+
 const express = require('express');
 const router = express.Router();
 
 const boardController = require('../../controllers/board.controller');
-const { authenticateToken } = require('../../middlewares/auth.mdw');
 
-router.get('/', authenticateToken, boardController.getAllBoard);
-router.post('/', authenticateToken, boardController.createBoard);
-router.get('/:boardId', authenticateToken, boardController.getBoard);
-router.patch('/:boardId', authenticateToken, boardController.updateBoard);
+router.get('/', passport.authenticate('jwt', { session: false }), boardController.getAllBoard);
+router.post('/', passport.authenticate('jwt', { session: false }), boardController.createBoard);
+router.get('/:boardId', passport.authenticate('jwt', { session: false }), boardController.getBoard);
+router.patch(
+  '/:boardId',
+  passport.authenticate('jwt', { session: false }),
+  boardController.updateBoard,
+);
 
 module.exports = router;

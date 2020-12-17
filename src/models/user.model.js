@@ -1,6 +1,10 @@
 const db = require('./db');
 
 module.exports = {
+  findById: async (userId) => {
+    const results = await db.get('user', { userId });
+    return results[0];
+  },
   findByUsername: async (username) => {
     const results = await db.get('user', { username });
     return results[0];
