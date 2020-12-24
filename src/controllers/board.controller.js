@@ -1,10 +1,11 @@
 const { WIDTH, HEIGHT } = require('../config/boardSize.config');
 const BoardModel = require('../models/board.model');
+const getDateNow = require('../utils/getDateNow');
 
 module.exports.createBoard = async (req, res) => {
   try {
     const hostname = req.user.username;
-    const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const guestname = req.body.guestname;
 
     let battleArray = '';
     for (let i = 0; i < WIDTH; i++) {
@@ -15,14 +16,16 @@ module.exports.createBoard = async (req, res) => {
 
     console.log({
       hostname,
+      guestname,
       battleArray,
-      createdAt,
+      createdAt: getDateNow(),
     });
 
     const boardId = await BoardModel.create({
       hostname,
+      guestname,
       battleArray,
-      createdAt,
+      createdAt: getDateNow(),
     });
 
     res.status(200).json({

@@ -17,4 +17,14 @@ router.get(
   authController.facebook,
 );
 
+router.get(
+  '/send-email-verify',
+  passport.authenticate('jwt', { session: false }),
+  authController.sendEmailVerify,
+);
+router.get('/verify-account/:hashToken', authController.verifyAccount);
+
+router.post('/send-email-forgot', authController.sendEmailForgot);
+router.post('/reset-password', authController.resetPassword);
+
 module.exports = router;
