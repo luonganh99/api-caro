@@ -23,3 +23,7 @@ module.exports.getAllUsers = async (req, res) => {
     });
   }
 };
+
+module.exports.getOnlineUsers = (req, res) => {
+  res.send('online users');
+};

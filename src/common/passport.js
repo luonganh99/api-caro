@@ -1,11 +1,17 @@
-const passport = require('passport');
 const { facebookAuth, googleAuth } = require('../config/auth.config');
 const FacebookTokenStrategy = require('passport-facebook-token');
 var GoogleTokenStrategy = require('passport-google-token').Strategy;
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
 
 const UserModel = require('../models/user.model');
 
-module.exports = () => {
+const options = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.SECRET_TOKEN,
+};
+
+module.exports = (passport) => {
   passport.use(
     new FacebookTokenStrategy(
       {
@@ -16,7 +22,7 @@ module.exports = () => {
         try {
           const userInfo = {
             externalId: profile.id,
-            username: profile.displayName,
+            username: profile.emails[0].value,
             email: profile.emails[0].value,
             fullname: profile.displayName,
             avatar: profile.photos[0].value,
@@ -24,7 +30,7 @@ module.exports = () => {
           let user = await UserModel.findByExternalId(userInfo.externalId);
           if (!user) {
             await UserModel.create(userInfo);
-            user = UserModel.findByExternalId(userInfo.externalId);
+            user = await UserModel.findByExternalId(userInfo.externalId);
           }
           return done(null, user);
         } catch (error) {
@@ -45,7 +51,7 @@ module.exports = () => {
         try {
           const userInfo = {
             externalId: profile.id,
-            username: profile.displayName,
+            username: profile.emails[0].value,
             email: profile.emails[0].value,
             fullname: profile.displayName,
             avatar: profile._json.picture,
@@ -53,7 +59,7 @@ module.exports = () => {
           let user = await UserModel.findByExternalId(userInfo.externalId);
           if (!user) {
             await UserModel.create(userInfo);
-            user = UserModel.findByExternalId(userInfo.externalId);
+            user = await UserModel.findByExternalId(userInfo.externalId);
           }
           return done(null, user);
         } catch (error) {
@@ -62,5 +68,21 @@ module.exports = () => {
         }
       },
     ),
+  );
+
+  passport.use(
+    new JwtStrategy(options, async (payload, done) => {
+      try {
+        const user = await UserModel.findById(payload.userId);
+
+        if (user) {
+          done(null, user);
+        } else {
+          done(null, false);
+        }
+      } catch (error) {
+        done(error, null);
+      }
+    }),
   );
 };
