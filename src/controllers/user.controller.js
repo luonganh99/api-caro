@@ -27,3 +27,22 @@ module.exports.getAllUsers = async (req, res) => {
 module.exports.getOnlineUsers = (req, res) => {
   res.send('online users');
 };
+
+module.exports.deleteUser = async (req, res) => {
+  const { userId } = req.params;
+  console.log('DEL userID: ', userId);
+
+  try {
+    const delRes = await UserModel.delete(userId);
+
+    if (delRes) {
+      return res.status(200).json({ status: 'success' });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+};

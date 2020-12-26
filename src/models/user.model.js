@@ -25,5 +25,9 @@ module.exports = {
   getAllUsers: async () => {
     return db.getAll('user');
   },
+  delete: async (userId) => {
+    return db.delete('user', { userId: userId });
+  },
+  // </Son>
   patch: (entity, condition) => db.update('user', entity, condition),
 };
