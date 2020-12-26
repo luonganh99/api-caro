@@ -13,4 +13,8 @@ module.exports = {
     const result = await db.add('user', user);
     return result.insertId;
   },
+  // <Son>
+  getAllUsers: async () => {
+    return db.getAll('user');
+  },
 };
