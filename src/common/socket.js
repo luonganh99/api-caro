@@ -32,16 +32,18 @@ const removeUser = (username, socketId) => {
 
 /* ------------- ROOM LIST -------------- */
 const roomList = {};
-const addRoom = (hostname, socketId) => {
+const addRoom = (hostname, avatar, socketId) => {
   const roomId = uuidv4();
   roomList[roomId] = {
     host: {
       username: hostname,
+      avatar,
       socketIds: [socketId],
       isReady: false,
     },
     guest: {
       username: null,
+      avatar: null,
       socketIds: [],
       isReady: false,
     },
@@ -55,7 +57,7 @@ const addRoom = (hostname, socketId) => {
   return roomId;
 };
 
-const joinRoom = (roomId, username, socketId) => {
+const joinRoom = (roomId, username, avatar, socketId) => {
   let { host, guest, viewers } = roomList[roomId];
   if (host.username === username) {
     host.socketIds = [...new Set([...host.socketIds, socketId])];
@@ -65,13 +67,11 @@ const joinRoom = (roomId, username, socketId) => {
   } else if (guest.username === username) {
     guest.socketIds = [...new Set([...guest.socketIds, socketId])];
   } else {
-    viewers = [
-      ...viewers,
-      {
-        username,
-        socketIds: [socketId],
-      },
-    ];
+    viewers.push({
+      username,
+      avatar,
+      socketIds: [socketId],
+    });
   }
   return roomList[roomId];
 };
@@ -120,6 +120,7 @@ const leaveRoom = (roomId, isHost, isViewer, username) => {
 module.exports = (io) => {
   io.on('connection', (socket) => {
     const username = socket.handshake.query.username;
+    const avatar = socket.handshake.query.avatar;
     console.log(username + ' has connected');
 
     socket.on('getOnlineUserReq', () => {
@@ -154,7 +155,7 @@ module.exports = (io) => {
     socket.on('joinRoom', (roomId) => {
       socket.join(`${roomId}`);
 
-      const roomInfo = joinRoom(roomId, username, socket.id);
+      const roomInfo = joinRoom(roomId, username, avatar, socket.id);
       // TODO: Emit to everyone room list updated
 
       // TODO: Emit everyone in room about room info
@@ -205,6 +206,7 @@ module.exports = (io) => {
           boardId,
           position: `${pos.x}-${pos.y}`,
           createdAt: getDateNow(),
+          sender: username,
         });
       } catch (error) {
         console.log(error);
@@ -217,12 +219,12 @@ module.exports = (io) => {
       //   console.log(error);
       // }
 
-      socket.to(`${roomId}`).emit('newMoveChessman', { chessman, pos });
+      socket.to(`${roomId}`).emit('newMoveChessman', { chessman, pos, sender: username });
     });
 
     socket.on('sendMessage', (data) => {
       const { boardId, content, roomId } = data;
-
+      console.log('message ', data);
       //save chat to db
       ChatModel.create({ sender: username, boardId, message: content, createdAt: getDateNow() });
 
