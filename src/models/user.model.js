@@ -30,4 +30,12 @@ module.exports = {
   },
   // </Son>
   patch: (entity, condition) => db.update('user', entity, condition),
+
+  findBySearchText: async (searchText) => {
+    return db.load(
+      `SELECT * FROM user WHERE MATCH (fullname) against ('${searchText}' IN NATURAL LANGUAGE MODE)
+      UNION
+      SELECT * FROM user WHERE username like '%${searchText}%' OR email like '%${searchText}%'`,
+    );
+  },
 };

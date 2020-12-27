@@ -3,18 +3,24 @@ const bcrypt = require('bcryptjs');
 const UserModel = require('../models/user.model');
 
 module.exports.getAllUsers = async (req, res) => {
+  console.log('Query params: ', req.query);
+  const { searchText } = JSON.parse(req.query.filter);
+
   try {
-    const listUsers = await UserModel.getAllUsers();
+    // const listUsers = await UserModel.getAllUsers();
+    let listUsers = [];
+
+    if (searchText && searchText.trim().length > 0) {
+      listUsers = await UserModel.findBySearchText(searchText);
+    } else {
+      listUsers = await UserModel.getAllUsers();
+    }
 
     listUsers.map((user) => {
       user.id = user.userId;
     });
 
-    return res.status(200).json(
-      // status: 'success',
-      // data: listUsers,
-      listUsers,
-    );
+    return res.status(200).json(listUsers);
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -111,21 +117,25 @@ module.exports.updateUser = async (req, res) => {
   }
 };
 
-// module.exports.createUser = async (req, res) => {
-//   const { id, username, password } = req.body;
-//   console.log('DEL userID: ', userId);
+// react admin request with filter
+module.exports.getUsers = async (req, res) => {
+  try {
+    const listUsers = await UserModel.getAllUsers();
 
-//   try {
-//     const delRes = await UserModel.delete(userId);
+    listUsers.map((user) => {
+      user.id = user.userId;
+    });
 
-//     if (delRes) {
-//       return res.status(200).json({ status: 'success' });
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       status: 'error',
-//       message: error.message,
-//     });
-//   }
-// };
+    return res.status(200).json(
+      // status: 'success',
+      // data: listUsers,
+      listUsers,
+    );
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+};
