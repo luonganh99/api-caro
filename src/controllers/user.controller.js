@@ -46,3 +46,22 @@ module.exports.deleteUser = async (req, res) => {
     });
   }
 };
+
+// module.exports.createUser = async (req, res) => {
+//   const { id, username, password } = req.body;
+//   console.log('DEL userID: ', userId);
+
+//   try {
+//     const delRes = await UserModel.delete(userId);
+
+//     if (delRes) {
+//       return res.status(200).json({ status: 'success' });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       status: 'error',
+//       message: error.message,
+//     });
+//   }
+// };
