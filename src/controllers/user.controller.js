@@ -47,6 +47,46 @@ module.exports.deleteUser = async (req, res) => {
   }
 };
 
+module.exports.getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await UserModel.findById(userId);
+    user.id = Number(userId);
+
+    if (user) {
+      return res.status(200).json(user);
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+};
+
+module.exports.updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const reqData = req.body;
+
+    delete reqData.id; // react-admin
+
+    console.log('update user req data: ', reqData);
+
+    const result = await UserModel.patch(reqData, { userId: Number(userId) });
+
+    if (result) {
+      return res.status(200).json({ id: Number(userId) });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+};
+
 // module.exports.createUser = async (req, res) => {
 //   const { id, username, password } = req.body;
 //   console.log('DEL userID: ', userId);
