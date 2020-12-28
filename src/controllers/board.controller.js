@@ -7,24 +7,9 @@ module.exports.createBoard = async (req, res) => {
     const hostname = req.user.username;
     const guestname = req.body.guestname;
 
-    let battleArray = '';
-    for (let i = 0; i < WIDTH; i++) {
-      for (let j = 0; j < HEIGHT; j++) {
-        battleArray += '0';
-      }
-    }
-
-    console.log({
-      hostname,
-      guestname,
-      battleArray,
-      createdAt: getDateNow(),
-    });
-
     const boardId = await BoardModel.create({
       hostname,
       guestname,
-      battleArray,
       createdAt: getDateNow(),
     });
 
@@ -56,11 +41,12 @@ module.exports.getBoard = async (req, res) => {
   }
 };
 
+// TODO: Update cup for host and guest
 module.exports.updateBoard = async (req, res) => {
   try {
     const { boardId } = req.params;
-    const userId = req.userId;
-    await BoardModel.update({ winner: userId }, { boardId });
+    const username = req.username;
+    await BoardModel.update({ winner: username, status: 1, finishedAt: getDateNow() }, { boardId });
 
     res.status(200).json({
       status: 'success',

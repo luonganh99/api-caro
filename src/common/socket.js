@@ -117,9 +117,26 @@ const leaveRoom = (roomId, isHost, isViewer, username) => {
   return room;
 };
 
+/* ------------- USER QUEUE -------------- */
+const userQueue = [];
+const isEquivalent = (firstCup, secondCup) => {
+  return Math.abs(firstCup - secondCup) <= 10;
+};
+
+const addQueue = (username, cups, socketId) => {
+  for (let i = 0; i < userQueue.length; i++) {
+    if (isEquivalent(cups, userQueue[i].cups)) {
+      return userQueue.splice(i, 1)[0];
+    }
+  }
+
+  userQueue.push({ username, cups, socketId });
+};
+
 module.exports = (io) => {
   io.on('connection', (socket) => {
     const username = socket.handshake.query.username;
+    const cups = socket.handshake.query.cups;
     console.log(username + ' has connected');
 
     socket.on('getOnlineUserReq', () => {
@@ -140,7 +157,7 @@ module.exports = (io) => {
       io.emit('getOnlineUserRes', Array.from(onlineList));
     });
 
-    socket.on('createRoom', async () => {
+    socket.on('createRoom', () => {
       const roomId = addRoom(username, socket.id);
       console.log('socketId ', socket.id);
       // TODO: Emit to everyone roomlist
@@ -164,6 +181,21 @@ module.exports = (io) => {
       console.log('Room list ', roomList);
     });
 
+    socket.on('playNow', () => {
+      const res = addQueue(username, cups, socket.id);
+      console.log(`${username} add queue ${res}`);
+      console.log(res);
+      console.log(userQueue);
+
+      if (res) {
+        const roomId = addRoom(username, socket.id);
+
+        io.to(socket.id).emit('joinRoom', roomId);
+        io.to(res.socketId).emit('joinRoom', roomId);
+        console.log('create room list ', roomList);
+      }
+    });
+
     socket.on('updateReady', ({ roomId, isHost, isReady }) => {
       const roomInfo = updateReady(roomId, isHost, isReady);
 
@@ -175,26 +207,6 @@ module.exports = (io) => {
 
       socket.to(`${roomId}`).emit('getRoomInfo', roomInfo);
     });
-
-    // socket.on('joinBoard', async (boardId) => {
-    //   try {
-    //     const board = await BoardModel.findById(boardId);
-
-    //     if (board.hostname == username) {
-    //       console.log(`Host ${username} has joined board ${boardId}`);
-    //       socket.join(`${boardId}`);
-    //     } else if (board.guestname == username) {
-    //       socket.join(`${boardId}`);
-    //       console.log(`Guest ${username} has joined board ${boardId}`);
-    //     } else if (board.guestname === null) {
-    //       await BoardModel.update({ guestname: username }, { boardId });
-    //       socket.join(`${boardId}`);
-    //       console.log(`Guest ${username} has joined board ${boardId}`);
-    //     }
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
-    // });
 
     socket.on('moveChessman', async ({ roomId, boardId, chessman, pos }) => {
       console.log(`${username} move chessman`);
