@@ -80,3 +80,17 @@ module.exports.getAllBoard = async (req, res) => {
     res.status(400).json({ status: 'error', message: error.message });
   }
 };
+
+module.exports.getBoards = async (req, res) => {
+  try {
+    const listBoards = await BoardModel.getAll();
+    listBoards.map((board) => {
+      board.id = board.boardId;
+    });
+
+    return res.status(200).json(listBoards);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ status: 'error', message: error.message });
+  }
+};

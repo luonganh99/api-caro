@@ -16,4 +16,5 @@ module.exports = {
     return result.insertId;
   },
   update: (entity, condition) => db.update('board', entity, condition),
+  getAll: async () => db.getAll('board'),
 };
