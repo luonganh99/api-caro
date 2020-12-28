@@ -82,9 +82,9 @@ module.exports.getUserById = async (req, res) => {
     const { userId } = req.params;
 
     const user = await UserModel.findById(userId);
-    user.id = Number(userId);
 
     if (user) {
+      user.id = Number(userId);
       return res.status(200).json(user);
     }
   } catch (error) {

@@ -5,6 +5,7 @@ const BoardModel = require('../models/board.model');
 const MovingHistoryModel = require('../models/movingHistory.model');
 const ChatModel = require('../models/chat.model');
 const getDateNow = require('../utils/getDateNow');
+const CUP_DIFFERENCES = require('../config/game.config');
 
 /* ------------- ONLINE LIST -------------- */
 const onlineList = new Map();
@@ -138,7 +139,7 @@ const leaveRoom = (roomId, isHost, isViewer, username) => {
 /* ------------- USER QUEUE -------------- */
 const userQueue = [];
 const isEquivalent = (firstCup, secondCup) => {
-  return Math.abs(firstCup - secondCup) <= 10;
+  return Math.abs(firstCup - secondCup) <= CUP_DIFFERENCES;
 };
 
 const addQueue = (username, cups, socketId) => {
@@ -155,7 +156,6 @@ module.exports = (io) => {
   io.on('connection', (socket) => {
     const username = socket.handshake.query.username;
     const avatar = socket.handshake.query.avatar;
-    const cups = socket.handshake.query.cups;
     console.log(username + ' has connected');
 
     socket.on('getOnlineUserReq', () => {
@@ -176,8 +176,8 @@ module.exports = (io) => {
       io.emit('getOnlineUserRes', Array.from(onlineList));
     });
 
-    socket.on('createRoom', () => {
-      const roomId = addRoom(username, socket.id);
+    socket.on('createRoom', ({ cups }) => {
+      const roomId = addRoom(username, avatar, cups, socket.id);
       console.log('socketId ', socket.id);
       // TODO: Emit to everyone roomlist
       // socket.broadcast.emit('newRoom', )
@@ -187,7 +187,7 @@ module.exports = (io) => {
       console.log('create room list ', roomList);
     });
 
-    socket.on('joinRoom', (roomId) => {
+    socket.on('joinRoom', ({ roomId, cups }) => {
       socket.join(`${roomId}`);
 
       const roomInfo = joinRoom(roomId, username, avatar, cups, socket.id);
@@ -201,14 +201,15 @@ module.exports = (io) => {
       console.log('Room list ', roomList);
     });
 
-    socket.on('playNow', () => {
+    socket.on('playNow', ({ cups }) => {
       const res = addQueue(username, cups, socket.id);
+      console.log('play now info ', username, cups, socket.id);
       console.log(`${username} add queue ${res}`);
       console.log(res);
       console.log(userQueue);
 
       if (res) {
-        const roomId = addRoom(username, socket.id);
+        const roomId = addRoom(username, avatar, cups, socket.id);
 
         io.to(socket.id).emit('joinRoom', roomId);
         io.to(res.socketId).emit('joinRoom', roomId);

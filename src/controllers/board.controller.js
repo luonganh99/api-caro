@@ -45,9 +45,12 @@ module.exports.getBoard = async (req, res) => {
 module.exports.updateBoard = async (req, res) => {
   try {
     const { boardId } = req.params;
-    const username = req.username;
+    const username = req.user.username;
     const cups = req.body.cups;
-    await BoardModel.update({ winner: username, status: 1, cups }, { boardId });
+    await BoardModel.update(
+      { winner: username, status: 1, finishedAt: getDateNow(), cups },
+      { boardId },
+    );
 
     res.status(200).json({
       status: 'success',

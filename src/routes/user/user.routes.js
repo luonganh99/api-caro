@@ -4,7 +4,11 @@ const router = express.Router();
 
 const UserController = require('../../controllers/user.controller');
 
-router.get('/onlineusers', UserController.getOnlineUsers);
+router.get(
+  '/:userId',
+  passport.authenticate('jwt', { session: false }),
+  UserController.getUserById,
+);
 router.patch(
   '/patch',
   passport.authenticate('jwt', { session: false }),
