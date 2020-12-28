@@ -33,7 +33,7 @@ const removeUser = (username, socketId) => {
 
 /* ------------- ROOM LIST -------------- */
 const roomList = {};
-const addRoom = (hostname, avatar, cups, socketId) => {
+const addRoom = (hostname, avatar, cups, config, socketId) => {
   const roomId = uuidv4();
   roomList[roomId] = {
     host: {
@@ -51,17 +51,28 @@ const addRoom = (hostname, avatar, cups, socketId) => {
       isReady: false,
     },
     viewers: [],
-    config: {
-      time: 20,
-    },
+    config,
     boardId: null,
-    password: null,
   };
   return roomId;
 };
 
-const joinRoom = (roomId, username, avatar, cups, socketId) => {
-  let { host, guest, viewers } = roomList[roomId];
+const joinRoom = (roomId, username, avatar, cups, password, socketId) => {
+  if (!roomList.hasOwnProperty(roomId)) {
+    return {
+      status: 'error',
+      type: 'wrongRoomId',
+    };
+  }
+
+  let { host, guest, viewers, config } = roomList[roomId];
+  if (config.password && config.password !== password) {
+    return {
+      status: 'error',
+      type: 'wrongPassword',
+    };
+  }
+
   if (host.username === username) {
     host.socketIds = [...new Set([...host.socketIds, socketId])];
   } else if (guest.username === null) {
@@ -78,7 +89,12 @@ const joinRoom = (roomId, username, avatar, cups, socketId) => {
       socketIds: [socketId],
     });
   }
-  return roomList[roomId];
+  return {
+    status: 'success',
+    data: {
+      roomInfo: roomList[roomId],
+    },
+  };
 };
 
 const updateReady = (roomId, isHost, isReady) => {
@@ -176,26 +192,38 @@ module.exports = (io) => {
       io.emit('getOnlineUserRes', Array.from(onlineList));
     });
 
-    socket.on('createRoom', ({ cups }) => {
-      const roomId = addRoom(username, avatar, cups, socket.id);
+    socket.on('roomList', () => {
+      io.to(socket.id).emit('getRoomList', roomList);
+    });
+
+    socket.on('createRoom', ({ cups, config }) => {
+      const roomId = addRoom(username, avatar, cups, config, socket.id);
       console.log('socketId ', socket.id);
       // TODO: Emit to everyone roomlist
-      // socket.broadcast.emit('newRoom', )
+      socket.broadcast.emit('getRoomList', roomList);
 
       // TODO: Emit to sender to join room
       io.to(socket.id).emit('joinRoom', roomId);
       console.log('create room list ', roomList);
     });
 
-    socket.on('joinRoom', ({ roomId, cups }) => {
+    socket.on('joinRoom', ({ roomId, cups, password }) => {
       socket.join(`${roomId}`);
 
-      const roomInfo = joinRoom(roomId, username, avatar, cups, socket.id);
-      console.log(roomInfo);
+      const res = joinRoom(roomId, username, avatar, cups, password, socket.id);
+      console.log(res);
+
+      if (res.status === 'error') {
+        console.log('chay ne');
+        io.to(socket.id).emit('joinRoomError', res.type);
+        return;
+      }
+
       // TODO: Emit to everyone room list updated
+      socket.broadcast.emit('getRoomList', roomList);
 
       // TODO: Emit everyone in room about room info
-      io.in(`${roomId}`).emit('getRoomInfo', roomInfo);
+      io.in(`${roomId}`).emit('getRoomInfo', res.data.roomInfo);
 
       console.log(`Host ${username} has joined room ${roomId}`);
       console.log('Room list ', roomList);
@@ -211,6 +239,7 @@ module.exports = (io) => {
       if (res) {
         const roomId = addRoom(username, avatar, cups, socket.id);
 
+        socket.broadcast.emit('getRoomList', roomList);
         io.to(socket.id).emit('joinRoom', roomId);
         io.to(res.socketId).emit('joinRoom', roomId);
         console.log('create room list ', roomList);
@@ -225,7 +254,7 @@ module.exports = (io) => {
 
     socket.on('updateBoard', ({ roomId, boardId }) => {
       const roomInfo = updateBoard(roomId, boardId);
-
+      socket.broadcast.emit('getRoomList', roomList);
       socket.to(`${roomId}`).emit('getRoomInfo', roomInfo);
     });
 
@@ -267,11 +296,13 @@ module.exports = (io) => {
       const roomInfo = leaveRoom(roomId, isHost, isViewer, username);
       console.log(roomList);
       socket.leave(`${roomId}`);
+      socket.broadcast.emit('getRoomList', roomList);
       socket.to(`${roomId}`).emit('getRoomInfo', roomInfo);
     });
 
     socket.on('updateRoom', ({ roomId, newCups, isHost }) => {
       const roomInfo = updateRoom(roomId, newCups, isHost);
+      socket.broadcast.emit('getRoomList', roomList);
       io.in(`${roomId}`).emit('getRoomInfo', roomInfo);
     });
 
