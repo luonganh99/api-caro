@@ -32,16 +32,20 @@ const removeUser = (username, socketId) => {
 
 /* ------------- ROOM LIST -------------- */
 const roomList = {};
-const addRoom = (hostname, socketId) => {
+const addRoom = (hostname, avatar, cups, socketId) => {
   const roomId = uuidv4();
   roomList[roomId] = {
     host: {
       username: hostname,
+      avatar,
+      cups,
       socketIds: [socketId],
       isReady: false,
     },
     guest: {
       username: null,
+      avatar: null,
+      cups: null,
       socketIds: [],
       isReady: false,
     },
@@ -55,23 +59,23 @@ const addRoom = (hostname, socketId) => {
   return roomId;
 };
 
-const joinRoom = (roomId, username, socketId) => {
+const joinRoom = (roomId, username, avatar, cups, socketId) => {
   let { host, guest, viewers } = roomList[roomId];
   if (host.username === username) {
     host.socketIds = [...new Set([...host.socketIds, socketId])];
   } else if (guest.username === null) {
     guest.username = username;
     guest.socketIds = [socketId];
+    guest.avatar = avatar;
+    guest.cups = cups;
   } else if (guest.username === username) {
     guest.socketIds = [...new Set([...guest.socketIds, socketId])];
   } else {
-    viewers = [
-      ...viewers,
-      {
-        username,
-        socketIds: [socketId],
-      },
-    ];
+    viewers.push({
+      username,
+      avatar,
+      socketIds: [socketId],
+    });
   }
   return roomList[roomId];
 };
@@ -89,6 +93,20 @@ const updateReady = (roomId, isHost, isReady) => {
 const updateBoard = (roomId, boardId) => {
   const room = roomList[roomId];
   room.boardId = boardId;
+  return room;
+};
+
+const updateRoom = (roomId, cups, isHost) => {
+  const room = roomList[roomId];
+  room.host.isReady = false;
+  room.guest.isReady = false;
+  if (isHost) {
+    room.host.cups = parseInt(room.host.cups) + parseInt(cups);
+    room.guest.cups = parseInt(room.guest.cups) - parseInt(cups);
+  } else {
+    room.host.cups = parseInt(room.host.cups) - parseInt(cups);
+    room.guest.cups = parseInt(room.guest.cups) + parseInt(cups);
+  }
   return room;
 };
 
@@ -136,6 +154,7 @@ const addQueue = (username, cups, socketId) => {
 module.exports = (io) => {
   io.on('connection', (socket) => {
     const username = socket.handshake.query.username;
+    const avatar = socket.handshake.query.avatar;
     const cups = socket.handshake.query.cups;
     console.log(username + ' has connected');
 
@@ -171,7 +190,8 @@ module.exports = (io) => {
     socket.on('joinRoom', (roomId) => {
       socket.join(`${roomId}`);
 
-      const roomInfo = joinRoom(roomId, username, socket.id);
+      const roomInfo = joinRoom(roomId, username, avatar, cups, socket.id);
+      console.log(roomInfo);
       // TODO: Emit to everyone room list updated
 
       // TODO: Emit everyone in room about room info
@@ -217,6 +237,7 @@ module.exports = (io) => {
           boardId,
           position: `${pos.x}-${pos.y}`,
           createdAt: getDateNow(),
+          sender: username,
         });
       } catch (error) {
         console.log(error);
@@ -229,12 +250,12 @@ module.exports = (io) => {
       //   console.log(error);
       // }
 
-      socket.to(`${roomId}`).emit('newMoveChessman', { chessman, pos });
+      socket.to(`${roomId}`).emit('newMoveChessman', { chessman, pos, sender: username });
     });
 
     socket.on('sendMessage', (data) => {
       const { boardId, content, roomId } = data;
-
+      console.log('message ', data);
       //save chat to db
       ChatModel.create({ sender: username, boardId, message: content, createdAt: getDateNow() });
 
@@ -246,6 +267,11 @@ module.exports = (io) => {
       console.log(roomList);
       socket.leave(`${roomId}`);
       socket.to(`${roomId}`).emit('getRoomInfo', roomInfo);
+    });
+
+    socket.on('updateRoom', ({ roomId, newCups, isHost }) => {
+      const roomInfo = updateRoom(roomId, newCups, isHost);
+      io.in(`${roomId}`).emit('getRoomInfo', roomInfo);
     });
 
     socket.on('disconnect', () => {
