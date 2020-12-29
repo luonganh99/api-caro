@@ -10,4 +10,6 @@ module.exports = {
     return result.insertId;
   },
   update: (entity, condition) => db.update('chat', entity, condition),
+  findByBoardId: (boardId) =>
+    db.load(`SELECT * FROM chat WHERE boardId = ${boardId} ORDER BY createdAt ASC`),
 };

@@ -1,5 +1,6 @@
 const { WIDTH, HEIGHT } = require('../config/boardSize.config');
 const BoardModel = require('../models/board.model');
+const chatModel = require('../models/chat.model');
 const getDateNow = require('../utils/getDateNow');
 
 module.exports.createBoard = async (req, res) => {
@@ -89,6 +90,32 @@ module.exports.getBoards = async (req, res) => {
     });
 
     return res.status(200).json(listBoards);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ status: 'error', message: error.message });
+  }
+};
+
+module.exports.getBoardById = async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    let board = await BoardModel.findById(boardId);
+    board.id = Number(boardId);
+    res.status(200).json(board);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ status: 'error', message: error.message });
+  }
+};
+
+module.exports.getChatsInBoard = async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const listMessages = await chatModel.findByBoardId(boardId);
+    res.status(200).json({
+      status: 'success',
+      data: listMessages,
+    });
   } catch (error) {
     console.log(error);
     res.status(400).json({ status: 'error', message: error.message });
