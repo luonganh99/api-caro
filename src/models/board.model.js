@@ -17,4 +17,9 @@ module.exports = {
   },
   update: (entity, condition) => db.update('board', entity, condition),
   getAll: async () => db.getAll('board'),
+
+  findByIdUserId: async (userId) => {
+    return db.load(`SELECT board.* FROM board JOIN user ON board.hostname = user.username OR board.guestname = user.username
+    WHERE user.userId = ${userId}`);
+  },
 };

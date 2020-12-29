@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const boardModel = require('../models/board.model');
 
 const UserModel = require('../models/user.model');
 
@@ -131,6 +132,25 @@ module.exports.getUsers = async (req, res) => {
       // data: listUsers,
       listUsers,
     );
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+};
+
+module.exports.getAllPlayedBoards = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const listGames = await boardModel.findByIdUserId(userId);
+
+    return res.status(200).json({
+      status: 'success',
+      data: listGames,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
