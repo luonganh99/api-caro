@@ -116,12 +116,23 @@ module.exports.signup = async (req, res) => {
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(password, salt);
 
+    const avatarList = [
+      'https://cdn4.iconfinder.com/data/icons/avatars-xmas-giveaway/128/batman_hero_avatar_comics-512.png',
+      'https://cdn4.iconfinder.com/data/icons/avatars-xmas-giveaway/128/anime_spirited_away_no_face_nobody-512.png',
+      'https://cdn4.iconfinder.com/data/icons/avatars-xmas-giveaway/128/trump_president_avatar_male-512.png',
+      'https://cdn4.iconfinder.com/data/icons/avatars-xmas-giveaway/128/pilot_traveller_person_avatar-512.png',
+      'https://cdn4.iconfinder.com/data/icons/avatars-xmas-giveaway/128/scientist_einstein_avatar_professor-512.png',
+      'https://cdn4.iconfinder.com/data/icons/avatars-xmas-giveaway/128/indian_man_turban_sikh-512.png',
+      'https://cdn4.iconfinder.com/data/icons/avatars-xmas-giveaway/128/sheep_mutton_animal_avatar-512.png',
+    ];
+
     const userId = await UserModel.create({
       username,
       password: hashPassword,
       fullname,
       email,
       createdAt: getDateNow(),
+      avatar: avatarList[Math.round(Math.random() * 7)],
     });
 
     // TODO: Send email to activate

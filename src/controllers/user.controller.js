@@ -30,10 +30,6 @@ module.exports.getAllUsers = async (req, res) => {
   }
 };
 
-module.exports.getOnlineUsers = (req, res) => {
-  res.send('online users');
-};
-
 module.exports.patchUserInfo = async (req, res) => {
   try {
     const cups = req.body.cups;
@@ -82,6 +78,7 @@ module.exports.getUserById = async (req, res) => {
     const { userId } = req.params;
 
     const user = await UserModel.findById(userId);
+    delete user.password;
 
     if (user) {
       user.id = Number(userId);
