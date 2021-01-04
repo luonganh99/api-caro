@@ -92,6 +92,32 @@ module.exports.getUserById = async (req, res) => {
   }
 };
 
+module.exports.getUserByUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const user = await UserModel.findByUsername(username);
+    delete user.password;
+
+    if (user) {
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          userInfo: {
+            avatar: user.avatar,
+            cups: user.cups,
+          },
+        },
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+};
+
 module.exports.updateUser = async (req, res) => {
   try {
     const { userId } = req.params;

@@ -9,6 +9,11 @@ router.get(
   passport.authenticate('jwt', { session: false }),
   UserController.getUserById,
 );
+router.get(
+  '/get-by-username/:username',
+  passport.authenticate('jwt', { session: false }),
+  UserController.getUserByUsername,
+);
 router.patch(
   '/patch',
   passport.authenticate('jwt', { session: false }),

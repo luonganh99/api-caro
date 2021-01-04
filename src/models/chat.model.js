@@ -5,6 +5,10 @@ module.exports = {
     const results = await db.get('chat', { chatId });
     return results[0];
   },
+  findByBoardId: async (boardId) => {
+    const results = await db.get('chat', { boardId });
+    return results;
+  },
   create: async (chat) => {
     const result = await db.add('chat', chat);
     return result.insertId;
