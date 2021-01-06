@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const dayjs = require('dayjs');
 const boardModel = require('../models/board.model');
 
 const UserModel = require('../models/user.model');
@@ -129,6 +130,7 @@ module.exports.updateUser = async (req, res) => {
     delete reqData.id; // react-admin
 
     console.log('update user req data: ', reqData);
+    reqData.createdAt = dayjs(reqData.createdAt).format('YYYY-MM-DD HH:mm:ss');
 
     const result = await UserModel.patch(reqData, { userId: Number(userId) });
 

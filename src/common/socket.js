@@ -270,7 +270,7 @@ const updateDraw = async (roomId) => {
   }
 };
 
-const leaveRoom = (roomId, username) => {
+const leaveRoom = (roomId, username, avatar) => {
   const room = roomList[roomId];
 
   if (room.viewers.find((viewer) => viewer.username === username)) {
@@ -288,6 +288,7 @@ const leaveRoom = (roomId, username) => {
     room.host = {
       username: room.guest.username,
       cups: room.guest.cups,
+      avatar: room.guest.avatar,
       socketIds: [...room.guest.socketIds],
       isReady: false,
     };
@@ -298,6 +299,7 @@ const leaveRoom = (roomId, username) => {
     socketIds: [],
     cups: null,
     isReady: false,
+    avatar: null,
   };
 
   clearInterval(countDownList[roomId]);
@@ -326,6 +328,12 @@ const addQueue = (username, cups, socketId) => {
   }
 
   userQueue.push({ username, cups, socketId });
+};
+
+const leaveQueue = (username) => {
+  for (let i = 0; i < userQueue.length; i++) {
+    if (userQueue[i].username === username) return userQueue.splice(i, 1);
+  }
 };
 
 module.exports = (io) => {
@@ -419,6 +427,14 @@ module.exports = (io) => {
       }
     });
 
+    socket.on('stopPlayNow', () => {
+      const user = leaveQueue(username);
+      console.log(userQueue);
+      // if (user) {
+      //   io.to(user.socketId).emit('')
+      // }
+    });
+
     socket.on('updateReady', ({ roomId, isHost, isReady }) => {
       const roomInfo = updateReady(roomId, isHost, isReady);
 
@@ -464,7 +480,7 @@ module.exports = (io) => {
 
     socket.on('leaveRoom', (roomId) => {
       console.log(`${username} is leaving `, roomId);
-      const roomInfo = leaveRoom(roomId, username);
+      const roomInfo = leaveRoom(roomId, username, avatar);
       console.log(`leaving `, roomInfo);
 
       socket.leave(`${roomId}`);
@@ -477,7 +493,7 @@ module.exports = (io) => {
 
       await updateRoom(roomId, newCups, username);
 
-      const roomInfo = leaveRoom(roomId, username);
+      const roomInfo = leaveRoom(roomId, username, avatar);
       console.log(`leaving `, roomInfo);
       socket.leave(`${roomId}`);
       io.in(`${roomId}`).emit('resign', { winner: roomInfo.host.username });
