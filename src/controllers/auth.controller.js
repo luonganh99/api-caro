@@ -138,7 +138,7 @@ module.exports.signup = async (req, res) => {
     // TODO: Send email to activate
     const hashToken = createToken({ userId }, 60 * 60);
     const subject = 'Activate your account at Caro Online';
-    const html = `<a href="${process.env.CLIENT_URL}/verify-account/${hashToken}">Activate</a>`;
+    const html = `<div><p>Click to <a href="${process.env.CLIENT_URL}/verify-account/${hashToken}">this to activate</a> your account</div>`;
     sendEmail(email, subject, html);
 
     res.status(200).json({
@@ -154,7 +154,7 @@ module.exports.signup = async (req, res) => {
 
 module.exports.google = async (req, res) => {
   if (req.user) {
-    const token = createToken(req.user.userId);
+    const token = createToken(req.user, 60 * 60 * 24);
     res.status(200).json({ status: 'success', data: { token, userInfo: req.user } });
   } else {
     res.status(400).json({ status: 'error', message: req.error });
@@ -163,7 +163,7 @@ module.exports.google = async (req, res) => {
 
 module.exports.facebook = async (req, res) => {
   if (req.user) {
-    const token = createToken(req.user.userId);
+    const token = createToken(req.user, 60 * 60 * 24);
     res.status(200).json({ status: 'success', data: { token, userInfo: req.user } });
   } else {
     res.status(400).json({ status: 'error', message: req.error });
@@ -202,7 +202,7 @@ module.exports.verifyAccount = (req, res) => {
 module.exports.sendEmailVerify = (req, res) => {
   const hashToken = createToken({ userId: req.user.userId }, 60 * 60);
   const subject = 'Activate your account at Caro Online';
-  const html = `<a href="${process.env.CLIENT_URL}/verify-account/${hashToken}">Activate</a>`;
+  const html = `<div><p>Click to <a href="${process.env.CLIENT_URL}/verify-account/${hashToken}">this to activate</a> your account</div>`;
 
   sendEmail(req.user.email, subject, html);
 };

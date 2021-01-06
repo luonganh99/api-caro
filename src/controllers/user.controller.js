@@ -4,8 +4,10 @@ const boardModel = require('../models/board.model');
 const UserModel = require('../models/user.model');
 
 module.exports.getAllUsers = async (req, res) => {
-  console.log('Query params: ', req.query);
-  const { searchText } = JSON.parse(req.query.filter);
+  let searchText;
+  if (Object.keys(req.query).length !== 0) {
+    searchText = JSON.parse(req.query.filter).searchText;
+  }
 
   try {
     // const listUsers = await UserModel.getAllUsers();

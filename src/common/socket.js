@@ -405,7 +405,7 @@ module.exports = (io) => {
       // TODO: Emit to everyone room list updated
       socket.broadcast.emit('getRoomList', roomList);
 
-      console.log(`Host ${username} has joined room ${roomId}`);
+      console.log(`Host ${username} has joined room ${roomId} with ${cups}`);
       console.log('Room list ', roomList);
     });
 

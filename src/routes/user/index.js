@@ -8,7 +8,7 @@ const movingHistoryRouter = require('./movingHistory.routes');
 
 module.exports = (app) => {
   app.use('/auth', authRouter);
-  app.use('/users', userRouter);
+  app.use('/users', passport.authenticate('jwt', { session: false }), userRouter);
   app.use('/boards', boardRouter);
   app.use('/moving-history', passport.authenticate('jwt', { session: false }), movingHistoryRouter);
   app.use('/chat', passport.authenticate('jwt', { session: false }), chatRouter);

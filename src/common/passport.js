@@ -5,6 +5,7 @@ const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 
 const UserModel = require('../models/user.model');
+const getDateNow = require('../utils/getDateNow');
 
 const options = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -26,6 +27,8 @@ module.exports = (passport) => {
             email: profile.emails[0].value,
             fullname: profile.displayName,
             avatar: profile.photos[0].value,
+            createdAt: getDateNow(),
+            status: 1,
           };
           let user = await UserModel.findByExternalId(userInfo.externalId);
           if (!user) {
@@ -55,6 +58,8 @@ module.exports = (passport) => {
             email: profile.emails[0].value,
             fullname: profile.displayName,
             avatar: profile._json.picture,
+            createdAt: getDateNow(),
+            status: 1,
           };
           let user = await UserModel.findByExternalId(userInfo.externalId);
           if (!user) {
