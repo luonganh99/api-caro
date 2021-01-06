@@ -7,7 +7,7 @@ module.exports = {
   },
   findByUsername: async (username) => {
     const results = await db.load(
-      `SELECT * FROM board WHERE (hostname = '${username}' OR guestname = '${username}') AND status = 1`,
+      `SELECT * FROM board WHERE (hostname = '${username}' OR guestname = '${username}') AND status = 1 ORDER BY createdAt DESC`,
     );
     return results;
   },

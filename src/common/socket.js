@@ -9,27 +9,20 @@ const getDateNow = require('../utils/getDateNow');
 const CUP_DIFFERENCES = require('../config/game.config');
 
 /* ------------- ONLINE LIST -------------- */
-const onlineList = new Map();
-const addUser = (username, socketId) => {
-  if (!onlineList.has(username)) {
-    // joining for the first time
-    onlineList.set(username, new Set([socketId]));
+const onlineList = {};
+const addUser = (username, avatar, socketId) => {
+  if (!onlineList.hasOwnProperty(username)) {
+    onlineList[username] = {
+      socketIds: [socketId],
+      avatar,
+    };
   } else {
-    // user has already joined from one client and now joining using another client
-    onlineList.get(username).add(socketId);
+    onlineList[username].socketIds = [...new Set([...onlineList[username].socketIds, socketId])];
   }
 };
 
 const removeUser = (username, socketId) => {
-  if (onlineList.has(username)) {
-    let userSocketIdSet = onlineList.get(username);
-    userSocketIdSet.delete(socketId);
-
-    // if there are no client for users, remove user
-    if (userSocketIdSet.size === 0) {
-      onlineList.delete(username);
-    }
-  }
+  delete onlineList[username];
 };
 
 /* ------------- ROOM LIST -------------- */
@@ -342,21 +335,21 @@ module.exports = (io) => {
     console.log(username + ' has connected');
 
     socket.on('getOnlineUserReq', () => {
-      io.emit('getOnlineUserRes', Array.from(onlineList));
+      io.emit('getOnlineUserRes', onlineList);
     });
 
     socket.on('online', () => {
-      addUser(username, socket.id);
+      addUser(username, avatar, socket.id);
       console.log(onlineList);
 
-      io.emit('getOnlineUserRes', Array.from(onlineList));
+      io.emit('getOnlineUserRes', onlineList);
     });
 
     socket.on('offline', () => {
       console.log(username + ' has disconnected');
       removeUser(username, socket.id);
       console.log(onlineList);
-      io.emit('getOnlineUserRes', Array.from(onlineList));
+      io.emit('getOnlineUserRes', onlineList);
     });
 
     socket.on('roomList', () => {
@@ -433,7 +426,7 @@ module.exports = (io) => {
     });
 
     socket.on('invite', ({ roomId, reciever }) => {
-      const recieverSocketId = onlineList.get(reciever).values().next().value;
+      const recieverSocketId = onlineList[reciever].socketIds[0];
       console.log(recieverSocketId);
 
       io.to(recieverSocketId).emit('inviteReq', {
@@ -545,7 +538,7 @@ module.exports = (io) => {
       console.log(username + ' has disconnected');
       removeUser(username, socket.id);
       console.log(onlineList);
-      io.emit('getOnlineUserRes', Array.from(onlineList));
+      io.emit('getOnlineUserRes', onlineList);
     });
   });
 };
