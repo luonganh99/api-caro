@@ -84,8 +84,15 @@ module.exports.getAllBoard = async (req, res) => {
 
 module.exports.getBoards = async (req, res) => {
   try {
-    const listBoards = await BoardModel.getAll();
-    listBoards.map((board) => {
+    const filter = JSON.parse(req.query.filter);
+    let listBoards;
+    if (Object.keys(filter).length !== 0) {
+      listBoards = await BoardModel.findByIdUserId(filter.userId);
+    } else {
+      listBoards = await BoardModel.getAll();
+    }
+
+    listBoards.forEach((board) => {
       board.id = board.boardId;
     });
 

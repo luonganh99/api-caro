@@ -20,7 +20,7 @@ module.exports.getAllUsers = async (req, res) => {
       listUsers = await UserModel.getAllUsers();
     }
 
-    listUsers.map((user) => {
+    listUsers.forEach((user) => {
       user.id = user.userId;
     });
 
