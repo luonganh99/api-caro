@@ -10,6 +10,7 @@ const getDateNow = require('../utils/getDateNow');
 module.exports.userLogin = async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log('LOGINNNNNN ', username, password);
 
     if (!username || !password) {
       return res.status(400).json({
@@ -23,12 +24,23 @@ module.exports.userLogin = async (req, res) => {
     }
 
     const user = await UserModel.findByUsername(username);
+
     if (!user) {
       return res.status(400).json({
         status: 'error',
         message: 'Authentication is incorrect',
         errors: {
           username: 'Username is incorrect',
+        },
+      });
+    }
+
+    if (user.status === 2) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Authentication is incorrect',
+        errors: {
+          username: 'Your account is banned',
         },
       });
     }
@@ -81,7 +93,7 @@ module.exports.adminLogin = async (req, res) => {
 
     const auth = await bcrypt.compare(password, user.password);
     if (!auth) {
-      return res.status(400).json({
+      return res.status(401).json({
         status: 'error',
         message: 'Authentication is incorrect',
         errors: {
@@ -90,15 +102,15 @@ module.exports.adminLogin = async (req, res) => {
       });
     }
 
-    const token = createToken(user.userId);
-
+    const token = createToken(user, 60 * 60 * 24);
+    console.log(user);
     delete user.password;
 
     res.status(200).json({
       status: 'success',
       data: {
         token,
-        userInfo: user,
+        adminInfo: user,
       },
     });
   } catch (error) {
@@ -154,6 +166,15 @@ module.exports.signup = async (req, res) => {
 
 module.exports.google = async (req, res) => {
   if (req.user) {
+    if (req.user.status === 2) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Authentication is incorrect',
+        errors: {
+          username: 'Your account is banned',
+        },
+      });
+    }
     const token = createToken(req.user, 60 * 60 * 24);
     res.status(200).json({ status: 'success', data: { token, userInfo: req.user } });
   } else {
@@ -163,6 +184,15 @@ module.exports.google = async (req, res) => {
 
 module.exports.facebook = async (req, res) => {
   if (req.user) {
+    if (req.user.status === 2) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Authentication is incorrect',
+        errors: {
+          username: 'Your account is banned',
+        },
+      });
+    }
     const token = createToken(req.user, 60 * 60 * 24);
     res.status(200).json({ status: 'success', data: { token, userInfo: req.user } });
   } else {

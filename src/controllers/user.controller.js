@@ -127,7 +127,10 @@ module.exports.updateUser = async (req, res) => {
     const { userId } = req.params;
     const reqData = req.body;
 
+    reqData.status = reqData.statusNum ? 1 : 2;
+
     delete reqData.id; // react-admin
+    delete reqData.statusNum;
 
     console.log('update user req data: ', reqData);
     reqData.createdAt = dayjs(reqData.createdAt).format('YYYY-MM-DD HH:mm:ss');
