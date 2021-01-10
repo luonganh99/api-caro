@@ -11,7 +11,7 @@ module.exports = async (email, subject, html) => {
     secure: false,
     auth: {
       user: 'luonganhnguyen99@gmail.com',
-      pass: 'luonganh0599',
+      pass: 'Test#Gmail99',
     },
   });
 
