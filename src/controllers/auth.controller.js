@@ -145,7 +145,7 @@ module.exports.signup = async (req, res) => {
       fullname,
       email,
       createdAt: getDateNow(),
-      avatar: avatarList[Math.round(Math.random() * 7)],
+      avatar: avatarList[Math.floor(Math.random() * 7)],
     });
 
     // TODO: Send email to activate
@@ -254,6 +254,10 @@ module.exports.sendEmailVerify = (req, res) => {
   const html = `<div><p>Click to <a href="${process.env.CLIENT_URL}/verify-account/${hashToken}">this to activate</a> your account</div>`;
 
   sendEmail(req.user.email, subject, html);
+
+  return res.status(200).json({
+    status: 'success',
+  });
 };
 
 module.exports.sendEmailForgot = async (req, res) => {
