@@ -125,6 +125,7 @@ module.exports.adminLogin = async (req, res) => {
 module.exports.signup = async (req, res) => {
   try {
     const { username, password, fullname, email } = req.body;
+
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(password, salt);
 
@@ -157,6 +158,24 @@ module.exports.signup = async (req, res) => {
       status: 'success',
     });
   } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      let errors = {};
+
+      if (error.sqlMessage.includes('username')) {
+        errors.username = 'This username is used. Please try another name!';
+      }
+
+      if (error.sqlMessage.includes('email')) {
+        errors.email = 'This email is used. Please try another email!';
+      }
+
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid signup',
+        errors,
+      });
+    }
+
     res.status(400).json({
       status: 'error',
       message: error.message,

@@ -447,6 +447,7 @@ module.exports = (io) => {
 
       io.to(recieverSocketId).emit('inviteReq', {
         roomId,
+        hostname: roomList[roomId].host.username,
         password: roomList[roomId].config.password,
       });
     });

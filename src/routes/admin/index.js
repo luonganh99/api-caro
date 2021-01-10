@@ -6,5 +6,9 @@ const passport = require('passport');
 module.exports = (app) => {
   app.use('/admin/auth', authRouter);
   app.use('/admin/manage/users', passport.authenticate('jwt', { session: false }), mangeUserRouter);
-  app.use('/admin/manage/boards', mangeBoardRouter);
+  app.use(
+    '/admin/manage/boards',
+    passport.authenticate('jwt', { session: false }),
+    mangeBoardRouter,
+  );
 };
