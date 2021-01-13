@@ -361,7 +361,6 @@ module.exports = (io) => {
     });
 
     socket.on('roomList', () => {
-      console.log('ban ne');
       io.to(socket.id).emit('getRoomList', roomList);
     });
 
@@ -414,8 +413,6 @@ module.exports = (io) => {
       const res = addQueue(username, cups, socket.id);
       console.log('play now info ', username, cups, socket.id);
       console.log(`${username} add queue ${res}`);
-      console.log(res);
-      console.log(userQueue);
 
       if (res) {
         const roomId = addRoom(username, avatar, cups, socket.id);
@@ -430,9 +427,6 @@ module.exports = (io) => {
     socket.on('stopPlayNow', () => {
       const user = leaveQueue(username);
       console.log(userQueue);
-      // if (user) {
-      //   io.to(user.socketId).emit('')
-      // }
     });
 
     socket.on('updateReady', ({ roomId, isHost, isReady }) => {

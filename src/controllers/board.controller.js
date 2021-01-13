@@ -90,7 +90,6 @@ module.exports.getBoards = async (req, res) => {
       listBoards = await BoardModel.findByIdUserId(filter.userId);
     } else {
       listBoards = await BoardModel.getAll();
-      console.log(listBoards);
     }
 
     listBoards.forEach((board) => {
